@@ -1,5 +1,5 @@
 # How to build exe if don't already have it
-# 1. You must have pytesseract downlaoded and located in the default folder: C:\Program Files\Tesseract-OCR\tesseract.exe
+# 1. You must have pytesseract (https://github.com/UB-Mannheim/tesseract/wiki) downlaoded and located in the default folder: C:\Program Files\Tesseract-OCR\tesseract.exe
 # 2. run: pyinstaller oa_processor.spec
 # 3. right click the "dist" folder
 # 4. click "reveal in file explorer"
