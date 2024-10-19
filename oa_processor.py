@@ -218,9 +218,10 @@ def main():
         print("Error: OPENAI_API_KEY is not set in the .env file.")
         return
 
-    home_directory = os.path.expanduser("~")
-    desktop_path = os.path.join(home_directory, "Desktop")
-    directory_name = os.path.join(desktop_path, "DataCSV & Refrence Summaries")
+    # home_directory = os.path.expanduser("~")
+    # desktop_path = os.path.join(home_directory, "Desktop")
+    
+    directory_name = os.path.join(directory, "DataCSV & Refrence Summaries")
 
     # Create the directory
     try:
@@ -268,7 +269,10 @@ def main():
 
                 OAName = str(subfolder_name)
                 subfolder_name = str("MATERIALS FOR " + str(subfolder_name))
-                subfolder_path = os.path.join(directory_name, subfolder_name)
+
+                subfolder_path = os.path.join(directory_name, subfolder_name) 
+                #directory_name is the folder where each subfolder is created in
+
                 try:
                     os.makedirs(subfolder_path)  # Use os.mkdir(directory_name) for a single directory
                     print(f"Directory '{subfolder_path}' created successfully on Desktop.")
