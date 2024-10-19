@@ -48,6 +48,22 @@ This project is designed to automate the processing of patent office action docu
 
 3. The script will process all PDF files in the `input` directory. Results will be saved in the `output` directory, with a separate folder for each patent and a `data.csv` file containing summary information.
 
+### Building an Executable
+
+If you don't already have an executable, follow these steps:
+
+1. You must have Tesseract OCR downloaded and located in the default folder: `C:\Program Files\Tesseract-OCR\tesseract.exe`. You can find it [here](https://github.com/UB-Mannheim/tesseract/wiki).
+2. Run the following command in the terminal:
+
+    ```bash
+    pyinstaller oa_processor.spec
+    ```
+
+3. Right-click the `dist` folder.
+4. Click "Reveal in File Explorer."
+5. Open the `dist` folder and copy (Ctrl + C) the executable file.
+6. Paste the executable in your desired location and double-click it to run it.
+
 ### Output
 
 For each processed patent, you'll find:
