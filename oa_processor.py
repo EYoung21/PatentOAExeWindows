@@ -1,12 +1,11 @@
+#How to build exe if don't already have it#
 
-
-#might not need all 5 refrences (some might be more important than others) (context dependant) - ~5-10 hours
-#exe (have exe in folder and script in there) - ~1 hrs
-#office action type - if final -> FOA Response 2mo if not -> OA Response  (search for "THIS ACTION IS MADE FINAL") - 20 mins - 1 hr
-#word templete - ~5-15 hrs context dependant
-#extract pdf from google patent - ~5 hrs?
-#improve AI and formatting of summary output into docx (with formatting) - ~5hrs
-
+#You must have pytesseract downlaoded and located in the default folder: C:\Program Files\Tesseract-OCR\tesseract.exe
+#run: pyinstaller oa_processor.spec
+#right click the "dist" folder
+#click "reveal in file explorer"
+#open the dist folder, and copy the exe
+#paste the exe you want to run it in and double click it to run it
 
 import fitz  # PyMuPDF
 from PIL import Image
