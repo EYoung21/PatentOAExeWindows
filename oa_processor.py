@@ -3,7 +3,7 @@
 # 2. run: "pyinstaller oa_processor.spec" in the terminal
 # 3. right click the "dist" folder
 # 4. click "reveal in file explorer"
-# 5. open the dist folder, and copy the exe
+# 5. open the dist folder, and copy (ctrl c) the exe
 # 6. paste the exe you want to run it in and double click it to run it
 
 import fitz  # PyMuPDF
