@@ -1,11 +1,10 @@
-#How to build exe if don't already have it#
-
-#You must have pytesseract downlaoded and located in the default folder: C:\Program Files\Tesseract-OCR\tesseract.exe
-#run: pyinstaller oa_processor.spec
-#right click the "dist" folder
-#click "reveal in file explorer"
-#open the dist folder, and copy the exe
-#paste the exe you want to run it in and double click it to run it
+# How to build exe if don't already have it
+# 1. You must have pytesseract downlaoded and located in the default folder: C:\Program Files\Tesseract-OCR\tesseract.exe
+# 2. run: pyinstaller oa_processor.spec
+# 3. right click the "dist" folder
+# 4. click "reveal in file explorer"
+# 5. open the dist folder, and copy the exe
+# 6. paste the exe you want to run it in and double click it to run it
 
 import fitz  # PyMuPDF
 from PIL import Image
