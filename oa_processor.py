@@ -225,10 +225,9 @@ class Solution():
         self.dueDate = dateMatches[1] if len(dateMatches) > 1 else None
         self.examinerName = examiner_name_match[0] if examiner_name_match else None
         self.phone_numbers = [re.sub(r'\s+', '', phone) for phone in phones]  # Clean up extracted phone numbers
-        self.total_refs = refMatches
         self.totalFinalTypes = typeMatches
 
-        self.total_pulled_refs = pulledRefMatches
+        self.total_pulled_refs = pulledRefMatches if pulledRefMatches else None
 
 #pyinstaller oa_processor.spec  
 
@@ -238,7 +237,6 @@ import sys
 
 def main():
     try:
-
         directory = os.getcwd()
         print(f"Processing files in: {directory}")
 
@@ -251,201 +249,181 @@ def main():
 
         # Create the directory
         try:
-            os.makedirs(directory_name)  # Use os.mkdir(directory_name) for a single directory
-            print(f"Directory '{directory_name}' created successfully on Desktop.")
-        except FileExistsError:
-            print(f"Directory '{directory_name}' already exists.")
+            os.makedirs(directory_name, exist_ok=True)
+            print(f"Directory '{directory_name}' created successfully.")
+        except PermissionError:
+            print(f"Permission denied: Unable to create directory '{directory_name}'. Please check your permissions.")
+            return
         except Exception as e:
-            print(f"An error occurred: {e}")
-
+            print(f"An error occurred while creating directory: {e}")
+            return
 
         # Define the CSV file path
         csv_file_path = os.path.join(directory_name, "data.csv")
-        # Define the header and rows
-        header = ["Appl. No", "Ref. No.", "Due Date", "Due Date", "IHC", "G", "Examiner's Name", "Examiner's Phone Number"]  # Example column names
-        rows = [
-        ]
+        header = ["Appl. No", "Ref. No.", "Due Date", "Due Date", "IHC", "G", "Examiner's Name", "Examiner's Phone Number"]
+        rows = []
 
-        #loops through input directory
         for filename in os.listdir(directory):
             if filename.lower().endswith('.pdf'):
                 f = os.path.join(directory, filename)
                 print(f"Processing file: {filename}")
-                # checking if it is a file
                 if os.path.isfile(f):
-
-                    # Define the parent folder name
-                    # parent_folder = "PatentOAs"
-                    parent_folder = "PatentOAs"
-
-                    # Get the absolute path
-                    absolute_path = os.path.abspath(f)
-
-                    # Split the path into components
-                    path_parts = absolute_path.split(os.path.sep)
-
-                    # Find the index of the parent folder
-                    subfolder_name = path_parts[-1]  # This is the last part of the path
-
-                    OAName = str(subfolder_name)
-                    subfolder_name = str("MATERIALS FOR " + str(subfolder_name))
-
-                    subfolder_path = os.path.join(directory_name, subfolder_name) 
-                    #directory_name is the folder where each subfolder is created in
+                    subfolder_name = f"MATERIALS FOR {filename}"
+                    subfolder_path = os.path.join(directory_name, subfolder_name)
 
                     try:
-                        os.makedirs(subfolder_path)  # Use os.mkdir(directory_name) for a single directory
-                        print(f"Directory '{subfolder_path}' created successfully on Desktop.")
-                    except FileExistsError:
-                        print(f"Directory '{subfolder_path}' already exists.")
+                        os.makedirs(subfolder_path, exist_ok=True)
+                        print(f"Directory '{subfolder_path}' created successfully.")
+                    except PermissionError:
+                        print(f"Permission denied: Unable to create subfolder '{subfolder_path}'. Skipping this file.")
+                        continue
                     except Exception as e:
-                        print(f"An error occurred: {e}")
+                        print(f"An error occurred while creating subfolder: {e}")
+                        continue
 
-                    
+                    try:
+                        obj = Solution()
+                        text = obj.extract_text_from_pdf(f)
+                        obj.defineREGEX(text)
 
-                    #f is pdfname
-                    obj = Solution()
+                        # Initialize variables with default values
+                        applicationID = obj.applicationID if obj.applicationID else "N/A"
+                        refrenceNumber = obj.refrenceNumber if obj.refrenceNumber else "N/A"
+                        dueDate = obj.dueDate if obj.dueDate else "N/A"
+                        examinerRealName = "N/A"
+                        examinerNumber = "N/A"
 
-                    text = obj.extract_text_from_pdf(f)
+                        print(f"ID: {applicationID}")
+                        print(f"Refrence #: {refrenceNumber}")
+                        print(f"DueDate: {dueDate}")
 
-                    obj.defineREGEX(text)
+                        if obj.examinerName:
+                            arr = obj.examinerName.split(",")
+                            examinerRealName = f"{arr[1].strip()} {arr[0].strip()}" if len(arr) > 1 else obj.examinerName
+                        print(f"Examiner name: {examinerRealName}")
 
-                    print("ID: " + str(obj.applicationID))
-                    print("Refrence #: " + str(obj.refrenceNumber))
-                    print("DueDate: " + str(obj.dueDate))
+                        if obj.phone_numbers:
+                            examinerNumber = str(obj.phone_numbers[0])[22:] if obj.phone_numbers else "N/A"
+                        print(f"Examiner #: {examinerNumber}")
 
-                    if obj.examinerName:
-                        arr = obj.examinerName.split(",")
-                        examinerRealName = ""
-                        examinerRealName += arr[1]
-                        examinerRealName += " "
-                        examinerRealName += arr[0]
-                    print("Examiner name: " + examinerRealName)
+                        if obj.total_pulled_refs:
+                            print(f"Pulled refs: {obj.total_pulled_refs}")
+                        else:
+                            obj.total_pulled_refs = []
+                            print("Pulled refs not found")
 
-                    # print("All refrences: " + str(obj.total_refs))
-                    # print("Phone #s: " + str(obj.phone_numbers))
+                        print(f"OA Type? {obj.totalFinalTypes}")
 
-                    if obj.phone_numbers:
-                        examinerNumber = str(obj.phone_numbers)[24:-2]
-                        print("Examiner #: " + examinerNumber)
+                        oaType = "FOA Response 2mo" if obj.totalFinalTypes else "OA Response"
 
-                    # print("All refrence #s: " + str(obj.total_refs))
+                        rows.append([applicationID, refrenceNumber, oaType, dueDate, "", "", examinerRealName, examinerNumber])
 
-                    print("Pulled refs:" + str(obj.total_pulled_refs))
+                        #here generate summary and put in subfolder_path
 
-                    # exit()
+                        total_pdf_summary = ""
 
-                    print("Final? " + str(obj.totalFinalTypes))
+                        # prompt = f"Summarize this document:\n\n{text}"
 
-                    if len(obj.totalFinalTypes) != 0:
-                        type = "FOA Response 2mo"
-                    else:
-                        type = "OA Response"
+                        prompt = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?\n\n{text}"
 
-                    rows.append([obj.applicationID, obj.refrenceNumber, type, obj.dueDate, "", "", examinerRealName, examinerNumber])
+                        # load_dotenv()
 
-                    #here generate summary and put in subfolder_path
-
-                    total_pdf_summary = ""
-
-                    # prompt = f"Summarize this document:\n\n{text}"
-
-                    prompt = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?\n\n{text}"
-
-                    # load_dotenv()
-
-                    client = OpenAI(
-                        # This is the default and can be omitted
-                        # api_key=os.environ.get("OPENAI_API_KEY"),
-                        api_key = os.getenv("OPENAI_API_KEY")
-                    )
-                    #stuff to summarize OAPDF
-                    # # print(os.getenv("OPENAI_API_KEY"))
-                    # response = client.chat.completions.create(
-                    #     model="gpt-4o",
-                    #     messages=[
-                    #         {
-                    #             "role": "user",
-                    #             "content": [
-                    #                 {"type": "text", "text": prompt}, #can individualize prompts later
-                    #                 # {
-                    #                 #     "type": "image_url",
-                    #                 #     "image_url": {"url": f"{img_url}"},
-                    #                 # },
-                    #             ],
-                    #         }
-                    #     ],
-                    # )
-
-                    # content = response.choices[0].message.content
-
-                    # total_pdf_summary += "Summary of original office action({OAName}):"
-                    # total_pdf_summary += "\n"
-                    # total_pdf_summary += content
-                    # total_pdf_summary += "\n"
-                    # total_pdf_summary += "\n"
-                    
-                    applicationIDPatenttext = obj.inputRefReturnText(obj.applicationID, subfolder_path)
-                    if applicationIDPatenttext is not None:
-                        prompt2 = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?\n\n{applicationIDPatenttext}"
-                        response2 = client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=[
-                                {
-                                    "role": "user",
-                                    "content": [
-                                        {"type": "text", "text": prompt2}, #can individualize prompts later
-                                        # {
-                                        #     "type": "image_url",
-                                        #     "image_url": {"url": f"{img_url}"},
-                                        # },
-                                    ],
-                                }
-                            ],
+                        client = OpenAI(
+                            # This is the default and can be omitted
+                            # api_key=os.environ.get("OPENAI_API_KEY"),
+                            api_key = os.getenv("OPENAI_API_KEY")
                         )
-                        content2 = response2.choices[0].message.content
-                        total_pdf_summary += f"Summary of application ID({obj.applicationID})'s google patent text"
-                        total_pdf_summary += "\n"
-                        total_pdf_summary += content2
-                        total_pdf_summary += "\n"
-                        total_pdf_summary += "\n"
-                    else:
-                        print(f"Unable to fetch patent text for application ID: {obj.applicationID}")
-                        # Handle this case appropriately, maybe skip this summary or use a placeholder
+                        #stuff to summarize OAPDF
+                        # # print(os.getenv("OPENAI_API_KEY"))
+                        # response = client.chat.completions.create(
+                        #     model="gpt-4o",
+                        #     messages=[
+                        #         {
+                        #             "role": "user",
+                        #             "content": [
+                        #                 {"type": "text", "text": prompt}, #can individualize prompts later
+                        #                 # {
+                        #                 #     "type": "image_url",
+                        #                 #     "image_url": {"url": f"{img_url}"},
+                        #                 # },
+                        #             ],
+                        #         }
+                        #     ],
+                        # )
 
+                        # content = response.choices[0].message.content
 
-
-                    for i in range(len(obj.total_pulled_refs)):
-                        refPatentText = obj.inputRefReturnText(obj.total_pulled_refs[i], subfolder_path)
-                        if refPatentText is not None:
-                            prompt = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?:\n\n{refPatentText}"
-                            response = client.chat.completions.create(
+                        # total_pdf_summary += "Summary of original office action({OAName}):"
+                        # total_pdf_summary += "\n"
+                        # total_pdf_summary += content
+                        # total_pdf_summary += "\n"
+                        # total_pdf_summary += "\n"
+                        
+                        applicationIDPatenttext = obj.inputRefReturnText(obj.applicationID, subfolder_path)
+                        if applicationIDPatenttext is not None:
+                            prompt2 = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?\n\n{applicationIDPatenttext}"
+                            response2 = client.chat.completions.create(
                                 model="gpt-4o-mini",
                                 messages=[
                                     {
                                         "role": "user",
                                         "content": [
-                                            {"type": "text", "text": prompt}, #can individualize prompts later
+                                            {"type": "text", "text": prompt2}, #can individualize prompts later
+                                            # {
+                                            #     "type": "image_url",
+                                            #     "image_url": {"url": f"{img_url}"},
+                                            # },
                                         ],
                                     }
                                 ],
                             )
-                            content = response.choices[0].message.content
-                            total_pdf_summary += f"Summary of current refrence({obj.total_pulled_refs[i]})'s google patent text"
+                            content2 = response2.choices[0].message.content
+                            total_pdf_summary += f"Summary of application ID({obj.applicationID})'s google patent text"
                             total_pdf_summary += "\n"
-                            total_pdf_summary += content
+                            total_pdf_summary += content2
                             total_pdf_summary += "\n"
                             total_pdf_summary += "\n"
                         else:
-                            print(f"Unable to fetch patent text for reference: {obj.total_pulled_refs[i]}")
+                            print(f"Unable to fetch patent text for application ID: {obj.applicationID}")
+                            # Handle this case appropriately, maybe skip this summary or use a placeholder
 
 
-                    # with open(subfolder_path + '/summary.txt', 'w') as summary_file:
-                    #     summary_file.write(str(total_pdf_summary))
 
-                    create_docx_summary(subfolder_path, total_pdf_summary, obj)
+                        for i in range(len(obj.total_pulled_refs)):
+                            refPatentText = obj.inputRefReturnText(obj.total_pulled_refs[i], subfolder_path)
+                            if refPatentText is not None:
+                                prompt = f"Can you summarize this technology including telling me what is the problem it's trying to solve, a detailed summary of the technology and keywords and their definitions used?:\n\n{refPatentText}"
+                                response = client.chat.completions.create(
+                                    model="gpt-4o-mini",
+                                    messages=[
+                                        {
+                                            "role": "user",
+                                            "content": [
+                                                {"type": "text", "text": prompt}, #can individualize prompts later
+                                            ],
+                                        }
+                                    ],
+                                )
+                                content = response.choices[0].message.content
+                                total_pdf_summary += f"Summary of current refrence({obj.total_pulled_refs[i]})'s google patent text"
+                                total_pdf_summary += "\n"
+                                total_pdf_summary += content
+                                total_pdf_summary += "\n"
+                                total_pdf_summary += "\n"
+                            else:
+                                print(f"Unable to fetch patent text for reference: {obj.total_pulled_refs[i]}")
 
-                    # exit()
+
+                        # with open(subfolder_path + '/summary.txt', 'w') as summary_file:
+                        #     summary_file.write(str(total_pdf_summary))
+
+                        create_docx_summary(subfolder_path, total_pdf_summary, obj)
+
+                        # exit()
+                    except Exception as e:
+                        print(f"An error occurred while processing file {filename}: {str(e)}")
+                        print(f"Skipping this file and continuing with the next...")
+                        continue
             else:
                 print(f"Skipping non-PDF file: {filename}")
 
@@ -453,9 +431,11 @@ def main():
         try:
             with open(csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(header)  # Write the header
-                writer.writerows(rows)    # Write the rows
+                writer.writerow(header)
+                writer.writerows(rows)
             print(f"CSV file '{csv_file_path}' created successfully with header and rows.")
+        except PermissionError:
+            print(f"Permission denied: Unable to create CSV file '{csv_file_path}'. Please check your permissions.")
         except Exception as e:
             print(f"An error occurred while creating the CSV file: {e}")
 
